@@ -1,4 +1,4 @@
-# pointbit
+# Pointbit
 
 A macOS menu bar app that shows a mark where the mouse is clicked, so every click is visible.
 A click sound is optional. It also takes pictures and recordings of a window or the whole screen
@@ -8,7 +8,7 @@ Version 1.0.0. Universal (Apple silicon + Intel), macOS 13 or later.
 
 ## Install
 1. Unzip the download.
-2. Move `pointbit.app` to Applications.
+2. Move `Pointbit.app` to Applications.
 3. Try opening the app once. The app is not notarized by Apple, so macOS may block it.
    If it does, open System Settings → Privacy & Security and click **Open Anyway**, then click **Open**
    in the warning. After that it opens normally ([Apple's steps](https://support.apple.com/en-us/102445)).
@@ -58,14 +58,14 @@ Toolchain: Xcode with Swift 6.3, macOS 13+ target. Check with `swift --version`.
 ```
 ./build.sh                                                # tests + build
 swift test                                                # tests only
-ditto build/pointbit.app /Applications/pointbit.app       # install (quit the running one first)
-open /Applications/pointbit.app                           # start
-open /Applications/pointbit.app --args --settings         # start with the settings window open
+ditto build/Pointbit.app /Applications/Pointbit.app       # install (quit the running one first)
+open /Applications/Pointbit.app                           # start
+open /Applications/Pointbit.app --args --settings         # start with the settings window open
 ```
 
 ## Stop
-To quit, choose "Quit pointbit" from the menu bar icon.
-To stop it from a terminal, find the app's PID with `pgrep -if "pointbit.app/Contents/MacOS/Pointbit"`.
+To quit, choose "Quit Pointbit" from the menu bar icon.
+To stop it from a terminal, find the app's PID with `pgrep -if "Pointbit.app/Contents/MacOS/Pointbit"`.
 Then run `kill <PID>` with that number.
 
 ## Common problems
@@ -75,7 +75,7 @@ Then run `kill <PID>` with that number.
 
 ## License
 PolyForm Shield 1.0.0. See `LICENSE`.
-You may use, change and build pointbit for any purpose permitted by the license, including at work.
-You may not use it to provide a product that competes with pointbit (for example, selling or giving away builds of it).
+You may use, change and build Pointbit for any purpose permitted by the license, including at work.
+You may not use it to provide a product that competes with Pointbit (for example, selling or giving away builds of it).
 The license text decides.
 Earlier copies released under MIT keep that license.

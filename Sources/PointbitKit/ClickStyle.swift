@@ -2,7 +2,7 @@
 import Foundation
 
 /// App name shown in the menu, About, and Preferences. Info.plist CFBundleName must match (build.sh checks).
-public let appName = "pointbit"
+public let appName = "Pointbit"
 
 enum ClickButton: String, CaseIterable { case left, right }
 
