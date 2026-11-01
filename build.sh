@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build "Pointbit.app" (arm64 + x86_64) into ./build with Swift Package Manager. Runs the tests first.
+# Build "pointbit.app" (arm64 + x86_64) into ./build with Swift Package Manager. Runs the tests first.
 set -e
 cd "$(dirname "$0")"
 swift test

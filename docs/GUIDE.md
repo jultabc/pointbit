@@ -1,8 +1,8 @@
 # Capture and Record Guide
 
-<img src="images/app-icon.png" alt="Pointbit app icon" width="96">
+<img src="images/app-icon.png" alt="pointbit app icon" width="96">
 
-Pointbit can take a picture or a recording of the window or the whole screen under the pointer.
+pointbit can take a picture or a recording of the window or the whole screen under the pointer.
 Each one is a key sequence: tap ⌘ twice, then press one letter.
 
 ## Shortcuts
@@ -30,8 +30,8 @@ The shortcuts are off by default. Turn them on once:
 |---|---|---|
 | 1 | Menu bar icon → **Settings…** | It opens Preferences. |
 | 2 | Under **Capture and Record**, check **Turn on ⌘ ⌘ + T / A / C / S**. | It turns the shortcuts on. |
-| 3 | Allow Pointbit in System Settings → Privacy & Security → **Accessibility**. | It lets the app read the ⌘ ⌘ keys. |
-| 4 | Allow Pointbit in **Screen & System Audio Recording** (the page opens after step 3). | It is needed for pictures and recordings. No audio is recorded. |
+| 3 | Allow pointbit in System Settings → Privacy & Security → **Accessibility**. | It lets the app read the ⌘ ⌘ keys. |
+| 4 | Allow pointbit in **Screen & System Audio Recording** (the page opens after step 3). | It is needed for pictures and recordings. No audio is recorded. |
 | 5 | If the Screen Recording line still shows ✗, click **Reopen App**. | macOS applies this permission after the app reopens. |
 
 Both permission lines show ✓ when the setup is complete:
@@ -80,7 +80,7 @@ Turning the shortcuts off, or losing the Accessibility permission, also stops a 
 | A beep and no file | Screen Recording is not allowed, or there is no window under the pointer. Allow Screen Recording and click **Reopen App**. |
 | No menu bar icon, or no red dot while recording | On a Mac with a notch, macOS hides menu bar icons that do not fit beside it. A recording adds the macOS recording indicator, which can push the icon out. Hold ⌘ and drag the icon to the right, or turn off other icons in System Settings → **Menu Bar**. |
 | "macOS stopped the key capture" in Preferences | Turn the checkbox off and on. |
-| The keyboard does not respond | Choose Apple menu → **Force Quit…**, then select Pointbit. This is not expected: the tap that can hold back keys exists for at most 3 s. |
+| The keyboard does not respond | Choose Apple menu → **Force Quit…**, then select pointbit. This is not expected: the tap that can hold back keys exists for at most 3 s. |
 | "Apple could not verify…" on first open | Open System Settings → Privacy & Security, click **Open Anyway**, then **Open** in the warning. This is needed once ([Apple's steps](https://support.apple.com/en-us/102445)). |
 
 ### Resetting the permissions
@@ -90,7 +90,7 @@ Quit the app from the menu bar first, then run:
 ```
 tccutil reset Accessibility si.codegg.pointbit
 tccutil reset ScreenCapture si.codegg.pointbit
-open /Applications/Pointbit.app --args --settings
+open /Applications/pointbit.app --args --settings
 ```
 
 ## How it works
