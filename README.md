@@ -7,11 +7,16 @@ with two taps of ⌘ and one letter.
 Version 1.0.0. Universal (Apple silicon + Intel), macOS 13 or later.
 
 ## Install
-1. Unzip the download.
-2. Move `Pointbit.app` to Applications.
-3. Try opening the app once. The app is not notarized by Apple, so macOS may block it.
-   If it does, open System Settings → Privacy & Security and click **Open Anyway**, then click **Open**
-   in the warning. After that it opens normally ([Apple's steps](https://support.apple.com/en-us/102445)).
+There is no download: build the app from the source. You need Xcode (Swift 6.3) and macOS 13 or later.
+```
+git clone https://github.com/jultabc/pointbit.git
+cd pointbit
+./build.sh                                                # tests + build/Pointbit.app
+ditto build/Pointbit.app /Applications/Pointbit.app       # install
+open /Applications/Pointbit.app
+```
+On the first start, the Preferences window opens. To take pictures and recordings, turn on the shortcuts there and
+allow the two permissions it asks for ([docs/GUIDE.md](docs/GUIDE.md)).
 
 ## What it does
 - Click marks: white at the center, translucent red toward the edge for a left click, green for a right click.
