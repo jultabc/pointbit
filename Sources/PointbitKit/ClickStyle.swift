@@ -17,8 +17,13 @@ struct ClickSettings: Equatable {
     var visualFeedback = true
     var hideStartMessage = false    // false: first start, the settings window opens once and this turns true
     var windowCapture = false       // ⌘ ⌘ C captures the window under the pointer
-    var copyPath = true             // a finished capture or recording also puts its file path on the clipboard
+    var copyPath = true             // Copy to clipboard when it ends: a finished capture or recording puts its file and path on the clipboard
     var saveFolder = ""             // folder for pictures and recordings; empty = the Desktop
+    var recordVoice = false         // recordings also take the microphone, and a text file of what was said
+    var voiceLanguage = ""          // speech recognition language; empty = the Mac's first preferred language
+    var markerColors = markerDefaultColors   // highlighter colors for ⌘ ⌘ 1 · 2 · 3
+    var markerSlot = 1              // 1 · 2 · 3: the color the next stroke uses
+    var recordFullSize = false      // false: video at point size (half the pixels each way on Retina), smaller files
     var playSound = true
     var soundVolume = 0.35          // 0...1
     var clickSound = ClickSoundKind.tac   // built-in click sound

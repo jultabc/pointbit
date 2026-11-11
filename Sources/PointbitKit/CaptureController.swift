@@ -19,16 +19,34 @@ final class CaptureController {
         self.model = model; self.overlay = overlay; self.prefsVisible = prefsVisible; self.showPrefs = showPrefs
         keyTaps.onCapture = { [weak self] key in
             guard let self else { return }
+            // While ⌘ ⌘ R is choosing, only ⌘ ⌘ R itself counts (it saves, or cancels while preparing).
+            if self.shot.cutoutBusy, key != .cutout { NSSound.beep(); return }
             switch key {
             case .window: self.shot.captureWindowUnderPointer()
             case .screen: self.shot.captureScreenUnderPointer()
+            case .cutout: self.shot.captureCutoutUnderPointer()
             case .recordWindow: self.recording.toggle(window: true)
             case .recordScreen: self.recording.toggle(window: false)
+            case .recordArea: self.recording.toggleArea()
+            case .undoMark: self.recording.marker.undo()      // nothing to erase when not recording
+            case .clearMarks: self.recording.marker.clear()
+            case .color1: self.model.s.markerSlot = 1   // saved; apply() passes the color on
+            case .color2: self.model.s.markerSlot = 2
+            case .color3: self.model.s.markerSlot = 3
+            case .pen: self.recording.marker.tool = .pen
+            case .oval: self.recording.marker.tool = .oval
+            case .box: self.recording.marker.tool = .box
+            case .zoom: self.recording.toggleZoom()
             }
         }
         shot.onCaptured = { [weak self] r in self?.captured(frame: r) }
+        shot.stepAside = { [weak self] in self?.recording.pictureStarts() ?? false }
+        shot.stepBack = { [weak self] in self?.recording.pictureDone() }
+        shot.isRecording = { [weak self] in self?.recording.isActive ?? false }
         // No automatic restart (TapGate). A recording would have no key left to stop it: stop it too.
-        keyTaps.onLostPermission = { [weak self] in self?.gate.lost(); self?.recording.stop(); self?.refresh() }
+        keyTaps.onLostPermission = { [weak self] in
+            self?.gate.lost(); self?.recording.stop(); self?.shot.cancelCutout(); self?.refresh()
+        }
     }
 
     /// Starts or stops ⌘ ⌘ C. When turned on: asks for both permissions once, then checks them every second
@@ -37,11 +55,15 @@ final class CaptureController {
     func apply(_ s: ClickSettings) {
         shot.copyPath = s.copyPath; recording.copyPath = s.copyPath
         shot.saveFolder = s.saveFolder; recording.saveFolder = s.saveFolder
+        recording.recordVoice = s.recordVoice; recording.voiceLanguage = s.voiceLanguage
+        recording.fullSize = s.recordFullSize
+        recording.marker.color = s.markerColors[min(2, max(0, s.markerSlot - 1))]
         guard s.windowCapture else {
             retry?.invalidate(); retry = nil; asked = false; gate.reset()
-            keyTaps.stop(); recording.stop(); model.keysAllowed = true; model.screenAllowed = true
+            keyTaps.stop(); recording.stop(); shot.cancelCutout(); model.keysAllowed = true; model.screenAllowed = true
             return
         }
+        recording.recoverLeftovers()   // only with the feature on: the save folder is not read otherwise
         if !asked {   // other settings changes also call this: ask only when the feature is turned on
             asked = true
             // One permission at a time: Accessibility first; Screen Recording follows once Accessibility is on.

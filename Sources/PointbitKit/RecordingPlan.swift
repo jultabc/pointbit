@@ -16,6 +16,14 @@ struct RecordingPlan: Equatable {
         func even(_ v: CGFloat) -> Int { let i = Int((v * scale).rounded()); return i - i % 2 }   // H.264 needs even sizes
         width = even(a.width); height = even(a.height)
     }
+
+    /// The source rect after the recorded window moved to `area` (Cocoa global) on `screen`: the same size, at the
+    /// window's new top-left corner, kept inside the screen.
+    func following(_ area: CGRect, on screen: CGRect) -> CGRect {
+        let x = min(max(area.minX - screen.minX, 0), max(screen.width - sourceRect.width, 0))
+        let y = min(max(screen.maxY - area.maxY, 0), max(screen.height - sourceRect.height, 0))
+        return CGRect(origin: CGPoint(x: x, y: y), size: sourceRect.size)
+    }
 }
 
 /// Start / stop order of one recording. Pure: the controller does the work the returned command names.

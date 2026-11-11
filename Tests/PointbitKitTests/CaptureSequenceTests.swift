@@ -115,7 +115,7 @@ struct CaptureSequenceTests {
     }
 
     @Test func eachActionKeyCompletesTheSequence() {
-        for k in CaptureKey.allCases {
+        for k in CaptureKey.onThisMac {
             var s = CaptureSequence()
             let a = [KeyInput.commandDown(0), .commandUp(0.1), .commandDown(0.2), .commandUp(0.3),
                      .key(code: k.rawValue, modifiers: false, at: 0.4)].map { s.feed($0) }
@@ -123,6 +123,16 @@ struct CaptureSequenceTests {
             #expect(s.feed(.keyUp(code: k.rawValue, at: 0.5)) == .swallow)
         }
     }
+    @Test func aKeyThisMacCannotDoGoesOn() {
+        // On macOS 13 (no background removal) R after ⌘ ⌘ must reach the front app.
+        var s = CaptureSequence(); s.keys = Set(CaptureKey.allCases).subtracting([.cutout])
+        let a = [KeyInput.commandDown(0), .commandUp(0.1), .commandDown(0.2), .commandUp(0.3),
+                 .key(code: CaptureKey.cutout.rawValue, modifiers: false, at: 0.4)].map { s.feed($0) }
+        #expect(a.last == .pass)
+        #expect(!s.wantsSwallowTap)
+        #expect(CaptureKey.onThisMac.contains(.cutout) == Cutout.isAvailable)
+    }
+
     @Test func otherKeyAfterTapsPassesAndCancels() {
         var s = CaptureSequence()
         let a = [KeyInput.commandDown(0), .commandUp(0.1), .commandDown(0.2), .commandUp(0.3),
@@ -133,8 +143,15 @@ struct CaptureSequenceTests {
 
     @Test func actionKeyCodesAreTheMacKeys() {
         #expect(CaptureKey.recordWindow.rawValue == UInt16(kVK_ANSI_T))
+        #expect(CaptureKey.recordArea.rawValue == UInt16(kVK_ANSI_D))
+        #expect([CaptureKey.pen, .oval, .box].map(\.rawValue) == [kVK_ANSI_L, kVK_ANSI_O, kVK_ANSI_B].map { UInt16($0) })
+        #expect(CaptureKey.zoom.rawValue == UInt16(kVK_ANSI_M))
         #expect(CaptureKey.recordScreen.rawValue == UInt16(kVK_ANSI_A))
         #expect(CaptureKey.window.rawValue == UInt16(kVK_ANSI_C))
         #expect(CaptureKey.screen.rawValue == UInt16(kVK_ANSI_S))
+        #expect(CaptureKey.undoMark.rawValue == UInt16(kVK_ANSI_Z))
+        #expect(CaptureKey.clearMarks.rawValue == UInt16(kVK_ANSI_X))
+        #expect(CaptureKey.cutout.rawValue == UInt16(kVK_ANSI_R))
+        #expect([CaptureKey.color1, .color2, .color3].map(\.rawValue) == [kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3].map { UInt16($0) })
     }
 }
