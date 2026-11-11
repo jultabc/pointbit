@@ -57,9 +57,9 @@ The shortcuts are off by default. Turn them on once:
 | 4 | Allow Pointbit in **Screen & System Audio Recording** (the page opens after step 3). | It is needed for pictures and recordings. System and app sound is never recorded. |
 | 5 | If the Screen Recording line still shows ✗, click **Reopen App**. | macOS applies this permission after the app reopens. |
 
-Both permission lines show ✓ when the setup is complete:
+The permission lines show ✓ when the setup is complete (Microphone and Speech Recognition only with Record my voice):
 
-<img src="images/preferences.png" alt="Preferences window, Capture tab, with the shortcuts turned on and the permission lines marked with a green check" width="760">
+<img src="images/preferences.png" alt="Preferences, Capture tab: Turn on ⌘ ⌘ shortcuts, Copy to clipboard when it ends and Record my voice checked; Microphone, Speech Recognition, Accessibility and Screen Recording marked with a green check" width="760">
 
 With the checkbox off, the app does not watch the keyboard.
 
