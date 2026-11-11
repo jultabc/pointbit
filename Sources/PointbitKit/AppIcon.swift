@@ -17,16 +17,6 @@ public enum AppIcon {
         return img
     }
 
-    /// Menu bar while recording: a red dot (not a template, so it stays red).
-    static func menuBarRecording() -> NSImage {
-        let img = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
-            NSColor.systemRed.setFill()
-            NSBezierPath(ovalIn: NSRect(x: 3, y: 3, width: 12, height: 12)).fill()
-            return true
-        }
-        img.accessibilityDescription = "\(appName) — recording"
-        return img
-    }
 
     /// App icon at `size` points.
     static func app(size: CGFloat) -> NSImage {

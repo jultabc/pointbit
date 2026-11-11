@@ -1,4 +1,4 @@
-// Key sequence: tap ⌘, tap ⌘, then press one action key (T · A · C · S). Pure: no event tap, no clock.
+// Key sequence: tap ⌘, tap ⌘, then press one action key (T · A · C · S · R · Z · X · 1 · 2 · 3). Pure: no event tap, no clock.
 import Foundation
 
 enum KeyInput: Equatable {
@@ -13,8 +13,23 @@ enum KeyInput: Equatable {
 enum CaptureKey: UInt16, CaseIterable {
     case recordWindow = 17   // T: record the window under the pointer (start / stop)
     case recordScreen = 0    // A: record the whole screen under the pointer (start / stop)
+    case recordArea = 2      // D: a box to size first (Return starts), then record it (start / stop)
     case window = 8          // C: picture of the window under the pointer
     case screen = 1          // S: picture of the whole screen under the pointer
+    case undoMark = 6        // Z: while recording, erase the last highlighter stroke
+    case clearMarks = 7      // X: while recording, erase all highlighter strokes
+    case cutout = 15         // R: picture of the window under the pointer, background removed (macOS 14+)
+    case color1 = 18         // 1 · 2 · 3: highlighter color 1 · 2 · 3 (Preferences)
+    case color2 = 19
+    case color3 = 20
+    case pen = 37            // L · O · B: while recording, the highlighter draws a free line, an oval or a box
+    case oval = 31
+    case box = 11
+    case zoom = 46           // M: while recording, the video zooms around the pointer (Magnify) or back
+
+    /// The keys this Mac acts on: R only where background removal exists (macOS 14+). A key left out is not an
+    /// action key here: after ⌘ ⌘ it goes on to the front app like any other letter.
+    static var onThisMac: Set<CaptureKey> { Cutout.isAvailable ? Set(allCases) : Set(allCases).subtracting([.cutout]) }
 }
 
 /// What the event tap does with the input.
@@ -28,6 +43,7 @@ struct CaptureSequence {
     var tapMax = 0.30       // longest ⌘ press that counts as a tap
     var gapMax = 0.35       // longest pause between the two taps
     var keyWindow = 1.0     // time after the second tap to press the action key
+    var keys = CaptureKey.onThisMac
 
     private enum State: Equatable { case idle, down1(Double), up1(Double), down2(Double), armed(Double), holding(UInt16) }
     private var state = State.idle
@@ -62,7 +78,7 @@ struct CaptureSequence {
         case (.commandUp(let t), .down2(let d)) where t - d <= tapMax:
             state = .armed(t)
         case (.key(let code, let mods, let t, _), .armed(let a)) where !mods && t - a <= keyWindow:
-            guard let k = CaptureKey(rawValue: code) else { state = .idle; return .pass }
+            guard let k = CaptureKey(rawValue: code), keys.contains(k) else { state = .idle; return .pass }
             state = .holding(code)
             return .capture(k)
         default:

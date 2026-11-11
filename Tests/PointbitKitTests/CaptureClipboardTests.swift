@@ -5,46 +5,48 @@ import Testing
 @Suite struct CaptureClipboardTests {
     let url = URL(fileURLWithPath: "/Users/x/Desktop/TACS-20261101-095000123.png")
 
-    @Test func pictureIsPathOnly() {
+    @Test func pictureIsTheFileAndItsPath() {
+        // Paste a capture straight into Notes. The file form lets Notes (or a chat app) attach
+        // it; the text form keeps a terminal pasting the path. No image form: a file, not a copy of its pixels.
         let board = NSPasteboard(name: NSPasteboard.Name("pointbit-test-\(UUID())"))
         defer { board.releaseGlobally() }
-        let image = NSImage(size: NSSize(width: 4, height: 4), flipped: false) { r in NSColor.red.setFill(); r.fill(); return true }
-        CaptureClipboard.put(file: url, image: image, to: board)
-        #expect(board.string(forType: .string) == url.path, "a terminal or an agent's chat pastes the path")
+        CaptureClipboard.put(file: url, to: board)
+        #expect(board.string(forType: .string) == url.path, "a terminal pastes the path")
+        #expect(board.string(forType: .fileURL) == url.absoluteString, "Notes pastes the file")
         let types = board.types ?? []
-        #expect(!types.contains(.png) && !types.contains(.tiff) && !types.contains(.fileURL),
-                "no image or file form, so an app does not paste the picture instead")
+        #expect(!types.contains(.png) && !types.contains(.tiff))
     }
 
-    @Test func recordingIsPathOnly() {
+    @Test func recordingIsTheFileAndItsPath() {
         let board = NSPasteboard(name: NSPasteboard.Name("pointbit-test-\(UUID())"))
         defer { board.releaseGlobally() }
         CaptureClipboard.put(file: url, to: board)
         #expect(board.string(forType: .string) == url.path)
-        let types = board.types ?? []
-        #expect(!types.contains(.png) && !types.contains(.tiff) && !types.contains(.fileURL))
+        #expect(board.string(forType: .fileURL) == url.absoluteString)
+    }
+
+    @Test func videoAndTextAreTwoPathsWithASpace() {
+        let board = NSPasteboard(name: NSPasteboard.Name("pointbit-test-\(UUID())"))
+        defer { board.releaseGlobally() }
+        let video = URL(fileURLWithPath: "/Users/x/Desktop/TACS-20261101-095000123.mov")
+        let text = URL(fileURLWithPath: "/Users/x/My Files/TACS-20261101-095000123.txt")
+        CaptureClipboard.put(files: [video, text], to: board)
+        #expect(board.string(forType: .string) == "/Users/x/Desktop/TACS-20261101-095000123.mov '/Users/x/My Files/TACS-20261101-095000123.txt'")
+        let files = board.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL]
+        #expect(files == [video, text], "both files, for an app that takes several")
     }
 }
 
 @Suite struct CaptureClipboardOffTests {
     let url = URL(fileURLWithPath: "/Users/x/Desktop/TACS-20261101-095000123.mov")
 
-    @Test func withoutPathPictureIsImageOnly() {
-        let board = NSPasteboard(name: NSPasteboard.Name("pointbit-test-\(UUID())"))
-        defer { board.releaseGlobally() }
-        let image = NSImage(size: NSSize(width: 4, height: 4), flipped: false) { r in NSColor.red.setFill(); r.fill(); return true }
-        CaptureClipboard.put(file: url, image: image, withPath: false, to: board)
-        #expect(board.string(forType: .string) == nil, "no path when the box is off")
-        #expect(board.string(forType: .fileURL) == nil)
-        #expect(board.canReadObject(forClasses: [NSImage.self]), "the picture is still copied")
-    }
-
-    @Test func withoutPathRecordingLeavesClipboard() {
+    @Test func offCopiesNothing() {
+        // "Copy to clipboard when it ends" off copies nothing (it used to copy a picture's image).
         let board = NSPasteboard(name: NSPasteboard.Name("pointbit-test-\(UUID())"))
         defer { board.releaseGlobally() }
         board.clearContents(); board.setString("before", forType: .string)
-        CaptureClipboard.put(file: url, withPath: false, to: board)
-        #expect(board.string(forType: .string) == "before")
+        CaptureClipboard.put(file: url, copy: false, to: board)
+        #expect(board.string(forType: .string) == "before" && board.string(forType: .fileURL) == nil)
     }
 
     @Test func copyPathIsOnByDefaultAndSaved() {

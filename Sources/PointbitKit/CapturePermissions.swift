@@ -1,7 +1,10 @@
 // Permissions for window capture: Accessibility (keys), Screen Recording (capture), Input Monitoring (only if
-// macOS refuses the listen-only key tap). Checks, requests and the System Settings pages.
+// macOS refuses the listen-only key tap); for voice: Microphone and Speech Recognition.
+// Checks, requests and the System Settings pages.
 import AppKit
 import ApplicationServices
+import AVFoundation
+import Speech
 
 enum CapturePermissions {
     /// Accessibility trust. With `prompt`, macOS shows its permission dialog when not trusted.
@@ -22,4 +25,15 @@ enum CapturePermissions {
     /// Input Monitoring (listen-only key taps), when macOS asks for it in addition to Accessibility.
     static func requestListen() { _ = CGRequestListenEventAccess() }
     static func openInputMonitoringSettings() { openPrivacy("Privacy_ListenEvent") }
+
+    static var microphoneAllowed: Bool { AVCaptureDevice.authorizationStatus(for: .audio) == .authorized }
+    static var speechAllowed: Bool { SFSpeechRecognizer.authorizationStatus() == .authorized }
+    /// Shows the system prompts (each once): Microphone, then Speech Recognition. `done` runs on the main thread.
+    static func requestVoice(done: @escaping @Sendable () -> Void) {
+        AVCaptureDevice.requestAccess(for: .audio) { _ in
+            SFSpeechRecognizer.requestAuthorization { _ in DispatchQueue.main.async(execute: done) }
+        }
+    }
+    static func openMicrophoneSettings() { openPrivacy("Privacy_Microphone") }
+    static func openSpeechSettings() { openPrivacy("Privacy_SpeechRecognition") }
 }

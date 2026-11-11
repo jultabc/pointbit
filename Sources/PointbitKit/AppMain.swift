@@ -19,12 +19,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                          prefsVisible: { [weak self] in self?.prefs?.isVisible == true },
                                          showPrefs: { [weak self] in self?.openPrefs() })
     var item: NSStatusItem!
+    let clock = RecordingClock()   // the seconds in the menu bar while recording
     var prefs: NSWindow?
     var sound: NSSound?
     var monitors: [Any] = []
     var visualItem: NSMenuItem!, soundItem: NSMenuItem!, stopRecordingItem: NSMenuItem!
 
     func applicationDidFinishLaunching(_ n: Notification) {
+        // `--transcribe <file.mov>`: writes the .txt for a recording made earlier (Record my voice), then quits.
+        // Runs as its own copy (open -n), so the one-copy rule below does not apply to it.
+        let args = CommandLine.arguments
+        if let i = args.firstIndex(of: "--transcribe"), i + 1 < args.count {
+            let video = URL(fileURLWithPath: args[i + 1]), language = model.s.voiceLanguage
+            Task { @MainActor in
+                let text = await Transcript.write(for: video, language: language)
+                if text == nil { NSSound.beep() }
+                NSApp.terminate(nil)
+            }
+            return
+        }
         // One copy only: a second copy (another path, same bundle id) would draw every mark twice.
         // The copy with the smallest PID stays, so two copies started at once do not both quit.
         let me = NSRunningApplication.current.processIdentifier
@@ -32,7 +45,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             .filter { $0.processIdentifier != me } }
         // Started by reopen() with the old copy's PID: wait up to 3 s for that process to be gone, then skip the
         // one-copy check (the old copy is the one this copy replaces).
-        let args = CommandLine.arguments
         if let i = args.firstIndex(of: Self.reopenedArgument), i + 1 < args.count, let old = pid_t(args[i + 1]) {
             let until = Date().addingTimeInterval(3)
             while kill(old, 0) == 0 && Date() < until { usleep(50_000) }
@@ -59,7 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         reloadSound(model.s)
         capture.recording.onRecording = { [weak self] on in
             guard let self else { return }
-            self.item.button?.image = on ? AppIcon.menuBarRecording() : AppIcon.menuBar()
+            if on { self.clock.start(in: self.item) } else { self.clock.stop(showing: AppIcon.menuBar()) }
             self.stopRecordingItem.isHidden = !on
         }
         capture.apply(model.s)
@@ -126,6 +138,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc func openPrefs() {
         if model.s.windowCapture { capture.refresh() }   // permissions may have changed while the window was closed
+        model.refreshVoice()
         if prefs == nil {
             let host = NSHostingController(rootView: PrefsView(m: model))
             host.sizingOptions = .preferredContentSize   // window grows / shrinks when the sound sliders show or hide

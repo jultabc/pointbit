@@ -36,6 +36,20 @@ final class PrefsModel: ObservableObject {
     @Published var captureStopped = false
     /// Accessibility is granted but the listen-only key tap was refused (Input Monitoring missing).
     @Published var listenMissing = false
+    /// Record my voice permissions, refreshed when the window opens and after the system prompts.
+    @Published var micAllowed = CapturePermissions.microphoneAllowed
+    @Published var speechAllowed = CapturePermissions.speechAllowed
+    func refreshVoice() {
+        if micAllowed != CapturePermissions.microphoneAllowed { micAllowed.toggle() }
+        if speechAllowed != CapturePermissions.speechAllowed { speechAllowed.toggle() }
+    }
+    /// Record my voice: turning it on shows the system prompts (each once).
+    func setVoice(_ on: Bool) {
+        s.recordVoice = on
+        if on { CapturePermissions.requestVoice { [weak self] in self?.refreshVoice() } }
+    }
+    /// Offline recognition languages for the pop-up, read once.
+    lazy var languages = Transcript.languages()
     var reopenApp: () -> Void = {}
     init(store: SettingsStore, onChange: @escaping (ClickSettings) -> Void) {
         // Set the wrapper directly: a plain assignment here runs didSet
@@ -49,11 +63,13 @@ final class PrefsModel: ObservableObject {
                     self.s[keyPath: p] = RGBA(r: c.redComponent, g: c.greenComponent, b: c.blueComponent, a: c.alphaComponent) } })
     }
     /// Back to ClickSettings() and the default sound. Keeps the first-start flag,
-    /// window capture, the save folder and the login item.
+    /// window capture, the save folder, the voice choices and the login item.
     func restoreDefaults() {
         let keep = s.hideStartMessage, capture = s.windowCapture, folder = s.saveFolder
+        let voice = s.recordVoice, language = s.voiceLanguage
         store.reset()
-        var d = ClickSettings(); d.hideStartMessage = keep; d.windowCapture = capture; d.saveFolder = folder; s = d
+        var d = ClickSettings(); d.hideStartMessage = keep; d.windowCapture = capture; d.saveFolder = folder
+        d.recordVoice = voice; d.voiceLanguage = language; s = d
     }
     /// Registers or removes this app as a login item. A failure is shown, not only beeped.
     /// "Requires approval" opens System Settings → Login Items, where the user allows it.
@@ -130,28 +146,33 @@ struct SoundPopUp: NSViewRepresentable {
     }
 }
 
-/// Settings window: a General section (launch at login), a Click Marks section (Visual and Audio boxes side by side),
-/// a Capture and Record section, then Restore Defaults.
+/// Settings window in three tabs (Click Marks · Capture · Highlighter); under them, Launch on computer startup (left) and
+/// Restore Defaults (right).
 struct PrefsView: View {
     @ObservedObject var m: PrefsModel
     private let labelWidth: CGFloat = 96
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 12) {
-            section("General") { GroupBox {
-                Toggle("Launch on computer startup", isOn: Binding(get: { m.loginItem }, set: { m.setLogin($0) }))
-                    .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-            } }
-            section("Click Marks") {
+            TabView {
                 HStack(alignment: .top, spacing: 12) {
                     GroupBox { visual.padding(12).frame(maxWidth: .infinity) }
                     GroupBox { audio.padding(12).frame(maxWidth: .infinity) }
                 }
-            }
-            section("Capture and Record") {
+                .padding(12).frame(maxHeight: .infinity, alignment: .top)
+                .tabItem { Text("Click Marks") }
                 GroupBox { capture.padding(12).frame(maxWidth: .infinity, alignment: .leading) }
+                    .padding(12).frame(maxHeight: .infinity, alignment: .top)
+                    .tabItem { Text("Capture") }
+                GroupBox { highlighter.padding(12).frame(maxWidth: .infinity, alignment: .leading) }
+                    .padding(12).frame(maxHeight: .infinity, alignment: .top)
+                    .tabItem { Text("Highlighter") }
             }
-            Button("Restore Defaults") { m.restoreDefaults() }
+            HStack {
+                Toggle("Launch on computer startup", isOn: Binding(get: { m.loginItem }, set: { m.setLogin($0) }))
+                Spacer()
+                Button("Restore Defaults") { m.restoreDefaults() }
+            }
         }
         .padding(20)
         .frame(width: 760)
@@ -170,12 +191,32 @@ struct PrefsView: View {
     private var capture: some View {
         HStack(alignment: .top, spacing: 24) {
             VStack(alignment: .leading, spacing: 8) {
-                Toggle("Turn on ⌘ ⌘ + T / A / C / S", isOn: $m.s.windowCapture)
+                Toggle("Turn on ⌘ ⌘ shortcuts", isOn: $m.s.windowCapture)
                 Text("Tap ⌘ twice, then press a letter. The window or screen under the pointer is used.")
                     .fixedSize(horizontal: false, vertical: true).padding(.leading, 20)
-                Toggle("Copy the file path when it ends", isOn: $m.s.copyPath)
-                Text("Paste it into a terminal or an agent's chat to share the file.")
+                Toggle("Copy to clipboard when it ends", isOn: $m.s.copyPath)
+                Text("Paste it into Notes, a chat app or a terminal.")
                     .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary).padding(.leading, 20)
+                Toggle("Record my voice", isOn: Binding(get: { m.s.recordVoice }, set: { m.setVoice($0) }))
+                Text("Recordings include the microphone. What you say is also written to a .txt file with times, on this Mac.")
+                    .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary).padding(.leading, 20)
+                if m.s.recordVoice {
+                    HStack(spacing: 8) {
+                        Text("Language:")
+                        Picker("", selection: $m.s.voiceLanguage) {
+                            Text("Mac's language").tag("")
+                            ForEach(m.languages, id: \.id) { Text($0.name).tag($0.id) }
+                        }
+                        .labelsHidden().fixedSize()
+                    }
+                    .padding(.leading, 20)
+                    permission("Microphone", ok: m.micAllowed) {
+                        Button("Open Settings") { CapturePermissions.openMicrophoneSettings() }
+                    }
+                    permission("Speech Recognition", ok: m.speechAllowed) {
+                        Button("Open Settings") { CapturePermissions.openSpeechSettings() }
+                    }
+                }
                 if m.s.windowCapture {
                     permission("Accessibility (keys)", ok: m.keysAllowed) {
                         Button("Open Settings") { CapturePermissions.openAccessibilitySettings() }
@@ -200,10 +241,19 @@ struct PrefsView: View {
             .frame(width: 300, alignment: .leading)
             VStack(alignment: .leading, spacing: 16) {
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
-                key("C", "Picture of the window", "File and clipboard")
-                key("S", "Picture of the whole screen", "File and clipboard")
+                key("C", "Picture of the window", m.s.copyPath ? "File and clipboard" : "File")
+                key("S", "Picture of the whole screen", m.s.copyPath ? "File and clipboard" : "File")
+                if Cutout.isAvailable { key("R", "Cut out a subject: point at it, then Return", m.s.copyPath ? "File and clipboard" : "File") }
                 key("T", "Start or stop recording the window", m.s.copyPath ? "File and clipboard" : "File")
                 key("A", "Start or stop recording the whole screen", m.s.copyPath ? "File and clipboard" : "File")
+            }
+            HStack(spacing: 8) {
+                Text("Recording size:")
+                Picker("", selection: $m.s.recordFullSize) {
+                    Text("Half (smaller files)").tag(false)
+                    Text("Full").tag(true)
+                }
+                .labelsHidden().fixedSize()
             }
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
@@ -218,6 +268,36 @@ struct PrefsView: View {
             }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// The highlighter while recording: how to draw and erase, and the three colors.
+    private var highlighter: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("While recording (⌘ ⌘ T, ⌘ ⌘ A or ⌘ ⌘ D). The lines are in the video and go away when the recording stops.")
+                .fixedSize(horizontal: false, vertical: true).foregroundStyle(.secondary)
+            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
+                GridRow { Text("⌥ + two fingers").font(.body.monospaced()); Text("Draw on the trackpad; the pointer follows the line") }
+                GridRow { Text("⌥ + drag").font(.body.monospaced()); Text("Draw with a mouse (left button)") }
+                GridRow { Text("⌥ + ⇧").font(.body.monospaced()); Text("A straight line from where the line started") }
+                GridRow { Text("loop").font(.body.monospaced()); Text("A closed loop becomes a clean ellipse (⌘ ⌘ Z: back to hand-drawn)") }
+                GridRow { Text("⌥ + click").font(.body.monospaced()); Text("Erase the line under the pointer") }
+                GridRow { Text("⌘ ⌘ Z").font(.body.monospaced()); Text("Erase the last line (again for the one before)") }
+                GridRow { Text("⌘ ⌘ X").font(.body.monospaced()); Text("Erase all lines") }
+                GridRow { Text("⌘ ⌘ 1 2 3").font(.body.monospaced()); Text("Color 1 · 2 · 3 for the next lines") }
+            }
+            HStack(spacing: 12) {
+                Text("Colors:")
+                ForEach(0..<3, id: \.self) { i in
+                    VStack(spacing: 2) {
+                        ColorPicker("\(i + 1)", selection: m.color(\.markerColors[i])).labelsHidden()
+                        Text("\(i + 1)").font(.caption2).fontWeight(m.s.markerSlot == i + 1 ? .bold : .regular)
+                    }
+                }
+            }
+            if !m.s.windowCapture {
+                Text("Turn on the ⌘ ⌘ shortcuts in Capture first.").foregroundStyle(.secondary)
+            }
         }
     }
 

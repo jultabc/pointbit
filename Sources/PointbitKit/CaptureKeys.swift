@@ -1,6 +1,6 @@
-// ⌘ ⌘ + T · A · C · S key taps.
+// ⌘ ⌘ + T · A · D · C · S · R · Z · X · 1 · 2 · 3 · L · O · B · M key taps.
 // - A listen-only tap, on while the feature is on. It only reads keys; it cannot hold back or delay input.
-// - A short-lived tap that can hold back the action key (T · A · C · S). It exists only from the second ⌘ press until that key is released,
+// - A short-lived tap that can hold back the action key (the letter). It exists only from the second ⌘ press until that key is released,
 //   and is removed after at most `swallowLimit` seconds whatever happens, so it can never block the keyboard
 //   for longer than that (for example after Accessibility is removed while the app runs).
 import AppKit

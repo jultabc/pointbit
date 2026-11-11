@@ -7,9 +7,11 @@
 <key>CFBundleName</key><string>Pointbit</string>
 <key>CFBundleExecutable</key><string>Pointbit</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>1.0.0</string>
-<key>CFBundleVersion</key><string>1.0.0</string>
+<key>CFBundleShortVersionString</key><string>1.2.0</string>
+<key>CFBundleVersion</key><string>1.2.0</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>LSUIElement</key><true/>
 <key>NSHighResolutionCapable</key><true/>
+<key>NSMicrophoneUsageDescription</key><string>With Record my voice on, recordings include what you say.</string>
+<key>NSSpeechRecognitionUsageDescription</key><string>With Record my voice on, what you say is written to a text file next to the recording. Recognition runs on this Mac.</string>
 </dict></plist>

@@ -4,7 +4,8 @@ import Foundation
 enum Key {
     static let visual = "visualFeedback", startMessage = "hideStartMessage", sound = "playSounds", volume = "soundVolume"
     static let size = "markDiameter", duration = "markSeconds", clickSound = "clickSound", pitch = "soundPitch", brightness = "soundBrightness", ring = "soundRing"
-    static let capture = "windowCapture", copyPath = "copyPath", saveFolder = "saveFolder"
+    static let capture = "windowCapture", copyPath = "copyPath", saveFolder = "saveFolder", voice = "recordVoice", voiceLanguage = "voiceLanguage", markerSlot = "markerSlot", fullSize = "recordFullSize"
+    static let markerColors = ["markerColor1", "markerColor2", "markerColor3"]
     static let colors = ["leftInner", "leftOuter", "rightInner", "rightOuter"]
 }
 
@@ -20,6 +21,13 @@ final class SettingsStore {
         if d.object(forKey: Key.capture) != nil { s.windowCapture = d.bool(forKey: Key.capture) }
         if d.object(forKey: Key.copyPath) != nil { s.copyPath = d.bool(forKey: Key.copyPath) }
         if let v = d.string(forKey: Key.saveFolder) { s.saveFolder = v }
+        if d.object(forKey: Key.voice) != nil { s.recordVoice = d.bool(forKey: Key.voice) }
+        if let v = d.string(forKey: Key.voiceLanguage) { s.voiceLanguage = v }
+        if d.object(forKey: Key.fullSize) != nil { s.recordFullSize = d.bool(forKey: Key.fullSize) }
+        if d.object(forKey: Key.markerSlot) != nil { s.markerSlot = min(3, max(1, d.integer(forKey: Key.markerSlot))) }
+        for (i, k) in Key.markerColors.enumerated() {
+            if let a = d.array(forKey: k) as? [Double], a.count == 4 { s.markerColors[i] = RGBA(r: a[0], g: a[1], b: a[2], a: a[3]) }
+        }
         if d.object(forKey: Key.sound) != nil { s.playSound = d.bool(forKey: Key.sound) }
         if let v = d.string(forKey: Key.clickSound).flatMap(ClickSoundKind.init(rawValue:)) { s.clickSound = v }
         if d.object(forKey: Key.pitch) != nil { s.soundShape.pitch = d.double(forKey: Key.pitch) }
@@ -41,6 +49,11 @@ final class SettingsStore {
         d.set(s.windowCapture, forKey: Key.capture)
         d.set(s.copyPath, forKey: Key.copyPath)
         d.set(s.saveFolder, forKey: Key.saveFolder)
+        d.set(s.recordVoice, forKey: Key.voice)
+        d.set(s.voiceLanguage, forKey: Key.voiceLanguage)
+        d.set(s.markerSlot, forKey: Key.markerSlot)
+        d.set(s.recordFullSize, forKey: Key.fullSize)
+        for (k, c) in zip(Key.markerColors, s.markerColors) { d.set([c.r, c.g, c.b, c.a], forKey: k) }
         d.set(s.playSound, forKey: Key.sound)
         d.set(s.soundVolume, forKey: Key.volume)
         d.set(s.clickSound.rawValue, forKey: Key.clickSound)
@@ -52,5 +65,5 @@ final class SettingsStore {
         for (k, c) in zip(Key.colors, [s.leftInner, s.leftOuter, s.rightInner, s.rightOuter]) { d.set([c.r, c.g, c.b, c.a], forKey: k) }
     }
 
-    func reset() { (Key.colors + [Key.visual, Key.startMessage, Key.capture, Key.copyPath, Key.saveFolder, Key.sound, Key.volume, Key.size, Key.duration, Key.clickSound, Key.pitch, Key.brightness, Key.ring]).forEach { d.removeObject(forKey: $0) } }
+    func reset() { (Key.colors + Key.markerColors + [Key.markerSlot, Key.fullSize, Key.visual, Key.startMessage, Key.capture, Key.copyPath, Key.saveFolder, Key.voice, Key.voiceLanguage, Key.sound, Key.volume, Key.size, Key.duration, Key.clickSound, Key.pitch, Key.brightness, Key.ring]).forEach { d.removeObject(forKey: $0) } }
 }

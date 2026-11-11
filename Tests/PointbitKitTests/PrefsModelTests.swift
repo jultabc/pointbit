@@ -37,6 +37,20 @@ struct PrefsModelTests {
             #expect(d.object(forKey: k) != nil, "key \(k) written after restore")
         }
 
+        // The voice choices are kept, like the save folder.
+        m.s.recordVoice = true; m.s.voiceLanguage = "ko-KR"; m.s.diameter = 40
+        m.restoreDefaults()
+        #expect(store.load().recordVoice && store.load().voiceLanguage == "ko-KR" && m.s.diameter == 16, "voice kept, marks reset")
+        m.s.recordVoice = false; m.s.voiceLanguage = ""
+        #expect(!ClickSettings().recordFullSize, "recordings are half size by default")
+        m.s.recordFullSize = true
+        #expect(store.load().recordFullSize, "recording size saved")
+        m.s.markerSlot = 3; m.s.markerColors[1] = RGBA(r: 0, g: 1, b: 0, a: 0.5)
+        #expect(store.load().markerSlot == 3 && store.load().markerColors[1].g == 1, "highlight color and choice saved")
+        m.restoreDefaults()
+        #expect(m.s.markerSlot == 1 && m.s.markerColors == markerDefaultColors, "highlight colors back to yellow · red · blue")
+        #expect(!ClickSettings().recordVoice, "voice is off by default")
+
         // Restore with the start message unchecked keeps it unchecked.
         m.s.hideStartMessage = false; m.s.diameter = 50
         m.restoreDefaults()
