@@ -127,7 +127,7 @@ Off by default. Turn it on in Preferences → Capture → **Record my voice**, a
 | Menu bar icon → **Stop Recording** | Shown only while recording. |
 | Quit the app | The file is finished before the app quits. |
 
-A window recording follows the window's top-left corner once it stands still, at its first size; at a screen edge it stops.
+In a window recording, the recorded area follows the window's top-left corner once it stands still, at its first size; at a screen edge the area stops moving and the recording goes on.
 Turning the shortcuts off, or losing the Accessibility permission, also stops a recording.
 
 ## Troubleshooting
