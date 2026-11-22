@@ -72,7 +72,7 @@ With the checkbox off, the app does not watch the keyboard.
 
 The app sets no fixed time limit for a recording (free disk space still applies). At half size a minute is about 12 MB for a quiet window and 45–50 MB for a moving window or the whole screen (measured on an M1), so about 0.7–3 GB an hour; Full size may be larger (not measured). For an agent, a few minutes is easiest to look through; say the second shown in the menu bar to point at a moment.
 
-Files go to the Desktop by default. To use another folder, choose it in Preferences → Capture → **Save to: Choose…**; **Desktop** switches back. If the chosen folder is moved or deleted, files go to the Desktop. A copied path that has a space or any character other than English letters, digits and / . _ - is put in single quotes, so it pastes into a shell as one argument.
+Files go to the Desktop by default. To use another folder, choose it in Preferences → Capture → **Save to: Choose…**; **Desktop** (shown once a folder is chosen) switches back. If the chosen folder is moved or deleted, files go to the Desktop. A copied path that has a space or any character other than English letters, digits and / . _ - is put in single quotes, so it pastes into a shell as one argument.
 
 With **Copy to clipboard when it ends** on (the default), the clipboard holds the file and its path when a picture or recording ends. Each app picks what it pastes: Notes, Mail or the Claude app paste the file, a terminal usually pastes the path. With it off, nothing is copied.
 
@@ -127,7 +127,7 @@ Off by default. Turn it on in Preferences → Capture → **Record my voice**, a
 | Menu bar icon → **Stop Recording** | Shown only while recording. |
 | Quit the app | The file is finished before the app quits. |
 
-A window recording keeps the area where the window was when the recording started.
+A window recording follows the window's top-left corner once it stands still, at its first size; at a screen edge it stops.
 Turning the shortcuts off, or losing the Accessibility permission, also stops a recording.
 
 ## Troubleshooting
